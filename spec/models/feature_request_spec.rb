@@ -1,75 +1,77 @@
 require 'rails_helper'
 
 RSpec.describe FeatureRequest, type: :model do
-  describe 'accessor' do
-    describe 'self class' do
-      let(:feature_request) { create(:feature_request, sponser: 'foo') }
+  let(:user) { create(:user) }
+  let(:product) { create(:product) }
+  let(:issue_attributes) do
+    {
+      user: user,
+      product: product,
+      title: 'XX 機能がほしい',
+      description: 'XX 機能とは...',
+    }
+  end
 
-      describe 'getter' do
-        it do
-          expect(feature_request.sponser).to eq('foo')
-        end
-      end
+  let(:feature_request_attributes) do
+    {
+      sponser: 'XX 社',
+    }
+  end
 
-      describe 'setter' do
-        it do
-          feature_request.sponser = 'bar'
-          expect(feature_request.sponser).to eq('bar')
-        end
-      end
-    end
+  describe 'Create' do
+    it do
+      FeatureRequest.create(
+        **issue_attributes,
+        **feature_request_attributes,
+      )
 
-    describe 'super class' do
-      let(:product) { create(:product) }
-      let!(:feature_request) { create(:feature_request, sponser: 'foo', product: product) }
-
-      describe 'getter' do
-        it do
-          expect(feature_request.description).to eq(feature_request.issue.description)
-          expect(feature_request.status).to eq(feature_request.issue.status)
-          expect(feature_request.product).to eq(product)
-        end
-      end
-
-      describe 'setter' do
-        let(:new_product) { create(:product) }
-
-        it do
-          feature_request.description = 'description'
-          expect(feature_request.description).to eq('description')
-
-          feature_request.status = :closed
-          expect(feature_request.status).to eq('closed')
-
-          feature_request.opened!
-          expect(feature_request.status).to eq('opened')
-
-          feature_request.product = new_product
-          expect(feature_request.product).to eq(new_product)
-        end
-      end
+      expect(Issue.last).to have_attributes(issue_attributes)
+      expect(FeatureRequest.last).to have_attributes(feature_request_attributes)
     end
   end
 
-  describe '#new' do
-    let(:product) { Product.create(name: 'product') }
-    let(:user) { User.create(name: 'user', email: 'test@example.com') }
-
-    subject(:return_value) { FeatureRequest.new(product: product, user: user, status: 'closed', sponser: 'foo') }
-
-    it { is_expected.to have_attributes(sponser: 'foo') }
+  describe 'Read Attributes' do
     it do
-      expect(return_value.issue).to have_attributes(status: 'closed', product: product, user: user)
+      feature_request = FeatureRequest.create(
+        **issue_attributes,
+        **feature_request_attributes,
+      )
+
+      expect(feature_request).to have_attributes(
+        **issue_attributes,
+        **feature_request_attributes,
+      )
     end
-end
+  end
 
-  describe 'query' do
-    let!(:feature_request_1) { create(:feature_request, status: 'opened', sponser: 'foo') }
-    let!(:feature_request_2) { create(:feature_request, status: 'closed', sponser: 'bar') }
-
+  describe 'Write Attributes' do
     it do
-      feature_requests = FeatureRequest.where(status: 'closed', sponser: 'bar')
-      expect(feature_requests).to contain_exactly(feature_request_2)
+      feature_request = FeatureRequest.create(
+        **issue_attributes,
+        **feature_request_attributes,
+      )
+
+      feature_request.title = 'YY 機能がほしい'
+      feature_request.sponser = 'YY 社'
+
+      expect(feature_request).to have_attributes(
+        **issue_attributes,
+        **feature_request_attributes,
+        title: 'YY 機能がほしい',
+        sponser: 'YY 社',
+      )
+    end
+  end
+
+  describe 'Query' do
+    it do
+      feature_request = FeatureRequest.create(
+        **issue_attributes,
+        **feature_request_attributes,
+      )
+
+      requests = FeatureRequest.find_by(title: 'XX 機能がほしい')
+      expect(requests).to eq(feature_request)
     end
   end
 end

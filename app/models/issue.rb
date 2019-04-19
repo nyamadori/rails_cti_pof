@@ -1,4 +1,6 @@
 class Issue < ApplicationRecord
+  cti_base_class
+
   belongs_to :user
   belongs_to :product
 
